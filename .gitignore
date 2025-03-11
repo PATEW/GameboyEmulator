@@ -1,3 +1,7 @@
+.zed
+.cache
+build
+
 # Prerequisites
 *.d
 
