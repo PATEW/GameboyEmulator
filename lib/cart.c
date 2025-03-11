@@ -1,3 +1,4 @@
+#include "common.h"
 #include <cart.h>
 
 typedef struct {
@@ -167,4 +168,15 @@ bool cart_load(char *cart) {
     printf("\t Checksum : %2.2X (%s)\n", ctx.header->checksum, (x & 0xFF) ? "PASSED" : "FAILED");
 
     return true;
+}
+
+u8 cart_read(u16 address) {
+    // for now this only works with ROM type 0, which is ROM ONLY
+
+    return ctx.rom_data[address];
+}
+
+void cart_write(u16 address, u8 value) {
+    // no cart writing needed in ROM type 0
+    NO_IMPL
 }
