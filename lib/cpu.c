@@ -1,4 +1,3 @@
-#include <instructions.h>
 #include <cpu.h>
 #include <bus.h>
 #include <emu.h>
@@ -7,55 +6,24 @@ cpu_context ctx = {0};
 
 void cpu_init() {
     ctx.registers.pc = 0x100;
+    ctx.registers.a = 0x01;
 }
 
 static void fetch_instruction() {
     ctx.current_opcode = bus_read(ctx.registers.pc++);
     ctx.current_instruction = instruction_by_opcode(ctx.current_opcode);
-
-    if (ctx.current_instruction == NULL) {
-        printf("Unknown Instruction %02X\n", ctx.current_opcode);
-    }
 }
 
-static void fetch_data() {
-    ctx.memory_destination = 0;
-    ctx.destination_is_memory = false;
-
-    switch(ctx.current_instruction->mode) {
-        case AM_IMP:
-            return;
-        case AM_R:
-            ctx.fetched_data = cpu_read_reg(ctx.current_instruction->reg_1);
-            return;
-        case AM_R_D8:
-            ctx.fetched_data = bus_read(ctx.registers.pc);
-            emu_cycles(1);
-            ctx.registers.pc++;
-            return;
-        case AM_D16: {
-            u16 lo = bus_read(ctx.registers.pc);
-            emu_cycles(1);
-
-            u16 hi = bus_read(ctx.registers.pc + 1);
-            emu_cycles(1);
-
-            ctx.fetched_data = lo | (hi << 8);
-
-            ctx.registers.pc += 2;
-
-            return;
-        }
-
-        default:
-            printf("Unknown addressing mode...%d\n", ctx.current_instruction->mode);
-            exit(-7);
-            return;
-    }
-}
+void fetch_data();
 
 static void execute() {
-    printf("not executing yet...\n");
+    IN_PROC proc = inst_get_processor(ctx.current_instruction->type);
+
+    if (!proc) {
+        NO_IMPL
+    }
+
+    proc(&ctx);
 }
 
 bool cpu_step() {
@@ -64,8 +32,17 @@ bool cpu_step() {
         u16 pc = ctx.registers.pc;
         // aka fetch-decode-execute
         fetch_instruction();
-        printf("Executing instruction: %02X    PC: %04X\n", ctx.current_opcode, pc);
         fetch_data();
+
+        printf("%04X: %-7s (%02X %02X %02X) A: %02X B: %02X C: %02X\n",
+            pc, inst_name(ctx.current_instruction->type), ctx.current_opcode,
+            bus_read(pc + 1), bus_read(pc + 2), ctx.registers.a, ctx.registers.b, ctx.registers.c);
+
+        if (ctx.current_instruction == NULL) {
+            printf("Unknown Instruction! %02X\n", ctx.current_opcode);
+            exit(-7);
+        }
+
         execute();
     }
 

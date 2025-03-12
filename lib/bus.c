@@ -1,6 +1,7 @@
 #include "common.h"
 #include <bus.h>
 #include <cart.h>
+#include <stdio.h>
 
 // 0x0000 - 0x3FFF : 16 KiB ROM bank 00
 // 0x4000 - 0x7FFF : 16 KiB ROM Bank 01 - Switchable
@@ -21,8 +22,8 @@ u8 bus_read(u16 address) {
         //ROM Data
         return cart_read(address);
     }
-
-    NO_IMPL
+    printf("UNSUPPORTED bus_read(%04X)\n", address);
+    //NO_IMPL
 }
 
 void bus_write(u16 address, u8 value) {
@@ -30,6 +31,18 @@ void bus_write(u16 address, u8 value) {
         //ROM Data
         cart_write(address, value); //gameboy seems to have weird instructs where sometimes carts try to write to ROM
     }
+    printf("UNDUPPORTED bus_write(%04X)\n", address);
+    //NO_IMPL
+}
 
-    NO_IMPL
+u16 bus_read16(u16 address) {
+    u16 lo = bus_read(address);
+    u16 hi = bus_read(address + 1);
+
+    return lo | (hi << 8);
+}
+
+void bus_write16(u16 address, u16 value) {
+    bus_write(address + 1, (value >> 8) & 0xFF);
+    bus_write(address, value & 0xFF);
 }

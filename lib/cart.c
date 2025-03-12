@@ -178,5 +178,6 @@ u8 cart_read(u16 address) {
 
 void cart_write(u16 address, u8 value) {
     // no cart writing needed in ROM type 0
+    printf("Attempting to cart write %02X to address %04X", value, address);
     NO_IMPL
 }
